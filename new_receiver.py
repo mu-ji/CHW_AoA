@@ -151,7 +151,44 @@ while True:
             ant1_data = complete_other_phase_data(ant1_data,reference_slope)
             ant2_data = complete_other_phase_data(ant2_data,reference_slope)
             ant3_data = complete_other_phase_data(ant3_data,reference_slope)
+
+            diff1 = ant1_data[72:80] - ant3_data[72:80]
+            diff2 = ant2_data[88:96] - ant3_data[88:96]
+
+            #print('diff1:',diff1)
+            #print('diff2:',diff2)
+
+            def release_jump(diff):
+                for i in range(len(diff)):
+                    if abs(diff[i]) > 201:
+                        if diff[i] < -201:
+                            diff[i] = diff[i] + 402
+                        if diff[i] > 201:
+                            diff[i] = diff[i] - 402
+                return diff
             
+            mean_phase_diff_1 = np.mean(release_jump(diff1))
+            mean_phase_diff_2 = np.mean(release_jump(diff2))
+
+
+            #print('mean_phase_diff_1:', mean_phase_diff_1)
+            #print('mean_phase_diff_2:', mean_phase_diff_2)
+
+            wave_length = 0.125 # m
+            antenna_interval = 0.0375 # m
+
+            angle1 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_1,wave_length,antenna_interval)
+            angle2 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_2,wave_length,2*antenna_interval)
+
+            #print('angle1:',angle1)
+            #print('angle2:',angle2)
+
+            if np.std((angle1,angle2)) >= 20:
+                print('not stable')
+            else:
+                print('estimate angle:', np.mean((angle1,angle2)))
+            
+            '''
             plt.figure()
             i = 8
             plt.plot([8*i*0.125]*2, [-201,201],c = 'b')
@@ -174,71 +211,7 @@ while True:
             plt.plot([i*0.125 for i in range(160)],ant3_data,c = 'pink',label = 'ANT1_1')
             plt.legend()
             plt.show()
-
-            diff1 = ant1_data[72:80] - reference_ant_data[72:80]
-            diff2 = ant2_data[88:96] - reference_ant_data[88:96]
-            diff3 = ant3_data[104:112] - reference_ant_data[104:112]
-
-            def release_jump(diff):
-                for i in range(len(diff)):
-                    if abs(diff[i]) > 201:
-                        if diff[i] < -201:
-                            diff[i] = diff[i] + 402
-                        if diff[i] > 201:
-                            diff[i] = diff[i] - 402
-                return diff
-            
-            mean_phase_diff_1 = np.mean(release_jump(diff1))
-            mean_phase_diff_2 = np.mean(release_jump(diff2))
-            mean_phase_diff_3 = np.mean(release_jump(diff3))
-
-            print('mean_phase_diff_1:', mean_phase_diff_1)
-            print('mean_phase_diff_2:', mean_phase_diff_2)
-            print('mean_phase_diff_3:', mean_phase_diff_3)
-            wave_length = 0.125 # m
-            antenna_interval = 0.0375 # m
-
-
-                
-            angle1 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_1,wave_length,antenna_interval)
-            angle2 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_2,wave_length,2*antenna_interval)
-            angle3 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_3,wave_length,3*antenna_interval)
-
-            print('angle1:',angle1)
-            print('angle2:',angle2)
-            print('angle3:',angle3)
-            print('mean_angle:',(angle1+angle2+angle3)/3)
-
-            diff_between_ref_2 = reference_ant_data - ant1_data
-            diff_between_3_4 = ant2_data - ant3_data
-
-            mean_phase_diff_ref_2 = np.mean(release_jump(diff_between_ref_2))
-            mean_phase_diff_3_4 = np.mean(release_jump(diff_between_3_4))
-
-            print('mean_phase_diff_ref_2:',mean_phase_diff_ref_2)
-            print('mean_phase_diff_3_4:',mean_phase_diff_3_4)
-            angle_ref_2 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_ref_2,wave_length,antenna_interval)
-            angle_3_4 = AoA_cal_angle.two_ant_cal_angle(mean_phase_diff_3_4,wave_length,antenna_interval)
-
-            print('angle_ref_2:',angle_ref_2)
-            print('angle_3_4:',angle_3_4)
-            #def reconstruct_signal(phase_data, magnitude_data):
-            #    i_data = magnitude_data * np.cos(phase_data)
-            #    q_data = magnitude_data * np.sin(phase_data)
-            #    iq_data = i_data + 1j * q_data
-            #    
-            #    original_signal = np.real(iq_data)
-            #    
-            #    return original_signal
-            
-            #signal_ref = reconstruct_signal(reference_ant_data, mag_data)
-            #signal_ant1 = reconstruct_signal(ant1_data, mag_data)
-            #signal_ant2 = reconstruct_signal(ant2_data, mag_data)
-            #signal_ant3 = reconstruct_signal(ant3_data, mag_data)
-            
-            #music_angle, spectrum = AoA_algorithm.music_spectrum(signal_ref, signal_ant1, signal_ant2, signal_ant3, 1)
-            #print('music_angle:',music_angle[0]/3.14*180)
-            
+            '''
             try:
                 response_rssi = bytes(rawFrame[-8:-4])
                 response_rssi = int(response_rssi.decode('utf-8'))
