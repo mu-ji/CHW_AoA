@@ -27,9 +27,9 @@ while True:
     byte  = ser.read(1)        
     rawFrame += byte
     if rawFrame[-3:]==[255, 255, 255]:
-        if len(rawFrame) == 648:
-            received_data = rawFrame[:640]
-            num_samples = 160
+        if len(rawFrame) == 1288:
+            received_data = rawFrame[:1288]
+            num_samples = 320
 
             phase_data = np.zeros(num_samples, dtype=np.int16)
             mag_data = np.zeros(num_samples, dtype=np.int16)
@@ -48,40 +48,46 @@ while True:
             #phase_data_diff = np.diff(phase_data)
 
             iteration = iteration + 1
-            '''
-            #fig = plt.figure()
-            #fig.add_subplot(121)
-            #plt.plot([i for i in range(160)],phase)
-            #fig.add_subplot(122)
-            #plt.plot([i for i in range(160)],phase_2pi)
-            #plt.show()
-
-            fig = plt.figure()
-            plt.plot([i*0.125 for i in range(160)],phase_data, marker='*')
-            plt.plot([i*0.125 for i in range(160)],mag_data, marker='*')
-
+            
+            plt.figure()
             i = 8
+            plt.plot([i*0.125 for i in range(320)],phase_data, marker='*')
             plt.plot([8*i*0.125]*2, [-201,201],c = 'b')
             plt.plot([8*(i+1)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+2)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+3)*0.125]*2, [-201,201],c = 'b')
             plt.plot([8*(i+4)*0.125]*2, [-201,201],c = 'b')
             plt.plot([8*(i+5)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+6)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+7)*0.125]*2, [-201,201],c = 'b')
             plt.plot([8*(i+8)*0.125]*2, [-201,201],c = 'b')
             plt.plot([8*(i+9)*0.125]*2, [-201,201],c = 'b')
-
-            i = 8+2
-            plt.plot([8*i*0.125]*2, [-201,201],c = 'g')
-            plt.plot([8*(i+1)*0.125]*2, [-201,201],c = 'g')
-            plt.plot([8*(i+4)*0.125]*2, [-201,201],c = 'g')
-            plt.plot([8*(i+5)*0.125]*2, [-201,201],c = 'g')
-            plt.plot([8*(i+8)*0.125]*2, [-201,201],c = 'g')
-            plt.plot([8*(i+9)*0.125]*2, [-201,201],c = 'g')
-
-
-            plt.plot([160*0.125]*2,[-201,201],c='r')
-            plt.xlabel('us')
-            plt.ylabel('phase')
+            plt.plot([8*(i+10)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+11)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+12)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+13)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+14)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+15)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+16)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+17)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+18)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+19)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+20)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+21)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+22)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+23)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+24)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+25)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+26)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+27)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+28)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+29)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+30)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+31)*0.125]*2, [-201,201],c = 'b')
+            plt.plot([8*(i+32)*0.125]*2, [-201,201],c = 'b')
+            plt.legend()
             plt.show()
-            '''
+
             np.save('phase_data.npy',phase_data)
 
             reference_ant_data = np.zeros_like(phase_data)

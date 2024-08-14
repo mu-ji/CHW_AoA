@@ -1,33 +1,28 @@
 import numpy as np
 from scipy.linalg import eig
 from scipy.linalg import svd
+import scipy.linalg as LA
+import scipy.signal as ss
 
+def array_response_vector(array,theta):
+    N = array.shape
+    v = np.exp(1j*2*np.pi*array*np.sin(theta))
+    return v/np.sqrt(N)
 
-def music_spectrum(iq_data1, iq_data2, iq_data3, iq_data4, num_signals):
-    # 将输入信号合并为一个矩阵
-    iq_data = np.column_stack((iq_data1, iq_data2, iq_data3, iq_data4))
-    
-    # 计算协方差矩阵
-    R = np.cov(iq_data)
-    
-    # 计算特征值和特征向量
-    eigenvalues, eigenvectors = eig(R)
-    
-    # 选择噪声子空间的特征向量
-    noise_eigenvectors = eigenvectors[:, eigenvalues.argsort()[:-num_signals]]
-    
-    # 构建 MUSIC 谱
-    omega = np.linspace(0, 2 * np.pi, 1000)
-    music_spectrum = np.zeros_like(omega)
-    for i, w in enumerate(omega):
-        a = np.exp(-1j * w)
-        music_spectrum[i] = 1 / np.linalg.norm(np.dot(noise_eigenvectors.conj().T, a))
-    
-    # 找到谱峰对应的频率
-    peak_indices = music_spectrum.argsort()[-num_signals:]
-    frequencies = omega[peak_indices] / (2 * np.pi)
-    
-    return frequencies, music_spectrum
+def music(CovMat,L,N,array,Angles):
+    # CovMat is the signal covariance matrix, L is the number of sources, N is the number of antennas
+    # array holds the positions of antenna elements
+    # Angles are the grid of directions in the azimuth angular domain
+    _,V = LA.eig(CovMat)
+    Qn  = V[:,L:N]
+    numAngles = Angles.size
+    pspectrum = np.zeros(numAngles)
+    for i in range(numAngles):
+        av = array_response_vector(array,Angles[i])
+        pspectrum[i] = 1/LA.norm((Qn.conj().transpose()@av))
+    psindB    = np.log10(10*pspectrum/pspectrum.min())
+    DoAsMUSIC,_= ss.find_peaks(psindB,height=1.35, distance=1.5)
+    return DoAsMUSIC,pspectrum
 
 def esprit(iq_data1, iq_data2, iq_data3, iq_data4, num_signals):
 
@@ -57,3 +52,4 @@ def esprit(iq_data1, iq_data2, iq_data3, iq_data4, num_signals):
     frequencies = np.angle(esprit_eigenvalues) / (2 * np.pi)
     
     return frequencies
+
