@@ -11,6 +11,7 @@ from scipy.linalg import eig
 
 import AoA_algorithm
 import AoA_cal_angle
+import AoA_filter
 
 from matplotlib.animation import FuncAnimation
 
@@ -96,7 +97,8 @@ def array_angle_cal_from_serial():
 
                 wave_length = 0.125 # m
                 antenna_interval = 0.0375 # m
-                x_angle_array = AoA_cal_angle.array_ant_cal_x_angle(antenna_phase_array, wave_length, antenna_interval,)
+                x_angle_array = AoA_cal_angle.array_ant_cal_x_angle_array(antenna_phase_array, wave_length, antenna_interval)
+                x_angle_array = AoA_cal_angle.array_ant_cal_x_angle_array(antenna_phase_array, wave_length, antenna_interval)
                 y_angle = 0
 
                 wave_length = 0.125 # m
@@ -133,6 +135,9 @@ text3 = ax.text(0, 0, '', ha='center', va='bottom')
 
 line4, = ax.plot([], [], 'y-', lw=2, label = 'row4 estimated angle')
 text4 = ax.text(0, 0, '', ha='center', va='bottom')
+
+line5, = ax.plot([], [], 'pink', lw=2, label = 'final estimated angle')
+text5 = ax.text(0, 0, '', ha='center', va='bottom')
 # 定义动画更新函数
 plt.legend()
 def animate(frame):
@@ -158,9 +163,19 @@ def animate(frame):
     x4 = np.cos(np.radians(x_angle_array[3]))
     y4 = np.sin(np.radians(x_angle_array[3]))
     line4.set_data([0, x4], [0, y4])
-    text4.set_position((0.9 * x1, 0.9 * y1))
+    text4.set_position((0.9 * x4, 0.9 * y4))
     text4.set_text(f'{x_angle_array[3]:.2f}°')
-    return [line1, text1, line2, text2, line3, text3, line4, text4]
+
+    x_angle = AoA_filter.mean_filter(x_angle_array)
+    #x_angle = AoA_filter.weighted_mean_filter(x_angle_array)
+    #x_angle = AoA_filter.antenna_shape_filter(x_angle_array)
+    x5 = np.cos(np.radians(x_angle))
+    y5 = np.sin(np.radians(x_angle))
+    line5.set_data([0, x5], [0, y5])
+    text5.set_position((0.9 * x5, 0.9 * y5))
+    text5.set_text(f'{x_angle:.2f}°')
+
+    return [line1, text1, line2, text2, line3, text3, line4, text4, line5, text5]
 
 # 创建并运行动画
 ani = FuncAnimation(fig, animate, frames=np.linspace(0, 360, 360), interval=50, blit=True)
