@@ -111,80 +111,73 @@ def array_angle_cal_from_serial():
             rawFrame = []
 
 # 设置图像大小和属性
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-1.2, 1.2)
-ax.set_ylim(-1.2, 1.2)
-ax.set_aspect('equal')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_title('Angle of Arrival Visualization')
+fig = plt.figure()
 
-# 绘制单位圆
+ax1 = fig.add_subplot(2,2,1)
+ax1.set_xlim(-1.2, 1.2)
+ax1.set_ylim(-1.2, 1.2)
+ax1.set_aspect('equal')
+ax1.set_title('Angle of Arrival x_angle estimation')
 circle = plt.Circle((0, 0), 1, fill=False, color='grey', linewidth=2)
-ax.add_artist(circle)
+ax1.add_artist(circle)
 
 # 绘制指示角度的线和文本
-line1, = ax.plot([], [], 'r-', lw=2, label = 'row1 estimated angle')
-text1 = ax.text(0, 0, '', ha='center', va='bottom')
+line1, = ax1.plot([], [], 'r-', lw=2, label = 'estimated x_angle')
+text1 = ax1.text(0, 0, '', ha='center', va='bottom')
 
-line2, = ax.plot([], [], 'b-', lw=2, label = 'row2 estimated angle')
-text2 = ax.text(0, 0, '', ha='center', va='bottom')
+ax2 = fig.add_subplot(2,2,2)
+ax2.set_xlim(-1.2, 1.2)
+ax2.set_ylim(-1.2, 1.2)
+ax2.set_aspect('equal')
+ax2.set_title('Angle of Arrival y_angle estimation')
+circle = plt.Circle((0, 0), 1, fill=False, color='grey', linewidth=2)
+ax2.add_artist(circle)
 
-line3, = ax.plot([], [], 'g-', lw=2, label = 'row3 estimated angle')
-text3 = ax.text(0, 0, '', ha='center', va='bottom')
+# 绘制指示角度的线和文本
+line2, = ax2.plot([], [], 'b-', lw=2, label = 'estimated y_angle')
+text2 = ax2.text(0, 0, '', ha='center', va='bottom')
 
-line4, = ax.plot([], [], 'y-', lw=2, label = 'row4 estimated angle')
-text4 = ax.text(0, 0, '', ha='center', va='bottom')
+ax3 = fig.add_subplot(2,2,3)
+ax3.set_xlim(-10, 10)
+ax3.set_ylim(-10, 10)
+ax3.set_aspect('equal')
+ax3.set_xlabel('X')
+ax3.set_ylabel('Y')
+ax3.set_title('2D Angle of Arrival Visualization')
 
-line5, = ax.plot([], [], 'pink', lw=2, label = 'final estimated angle')
-text5 = ax.text(0, 0, '', ha='center', va='bottom')
+
+# 绘制指示角度的线和文本
+dot, = ax3.plot([], [], 'ro', markersize=10)
+
 # 定义动画更新函数
 plt.legend()
-kalman_filter = AoA_filter._2d_Kalman_Filter()
 def animate(frame):
+    anchor_x = 0
+    anchor_y = 0
+    height = 1
     x_angle_array,y_angle_array = array_angle_cal_from_serial()
-    #kalman_filter.update_R(np.hstack((x_angle_array, y_angle_array)))
-    #print(np.hstack((x_angle_array, y_angle_array)))
-    #print(kalman_filter.R)
-    kalman_filter.predict()
-    kalman_filter.update(np.hstack((x_angle_array, y_angle_array)))
-    '''
-    x1 = np.cos(np.radians(x_angle_array[0]))
-    y1 = np.sin(np.radians(x_angle_array[0]))
+    x_angle = AoA_filter.mean_filter(x_angle_array)
+    y_angle = AoA_filter.mean_filter(y_angle_array)
+
+    x1 = np.cos(np.radians(x_angle))
+    y1 = np.sin(np.radians(x_angle))
     line1.set_data([0, x1], [0, y1])
     text1.set_position((0.9 * x1, 0.9 * y1))
-    text1.set_text(f'{x_angle_array[0]:.2f}°')
+    text1.set_text(f'{x_angle:.2f}°')
 
-    x2 = np.cos(np.radians(x_angle_array[1]))
-    y2 = np.sin(np.radians(x_angle_array[1]))
+    x2 = np.cos(np.radians(y_angle))
+    y2 = np.sin(np.radians(y_angle))
     line2.set_data([0, x2], [0, y2])
     text2.set_position((0.9 * x2, 0.9 * y2))
-    text2.set_text(f'{x_angle_array[1]:.2f}°')
+    text2.set_text(f'{y_angle:.2f}°')
 
-    x3 = np.cos(np.radians(x_angle_array[2]))
-    y3 = np.sin(np.radians(x_angle_array[2]))
-    line3.set_data([0, x3], [0, y3])
-    text3.set_position((0.9 * x3, 0.9 * y3))
-    text3.set_text(f'{x_angle_array[2]:.2f}°')
+    
+    x_dot = height/np.tan(x_angle) + anchor_x
+    y_dot = height/np.tan(y_angle) + anchor_y
+    print(x_dot, y_dot)
+    dot.set_data(x_dot, y_dot)
 
-    x4 = np.cos(np.radians(x_angle_array[3]))
-    y4 = np.sin(np.radians(x_angle_array[3]))
-    line4.set_data([0, x4], [0, y4])
-    text4.set_position((0.9 * x4, 0.9 * y4))
-    text4.set_text(f'{x_angle_array[3]:.2f}°')
-    '''
-    x_angle = AoA_filter.mean_filter(x_angle_array)
-    x_angle = kalman_filter.X[0][0]
-
-    #x_angle = AoA_filter.weighted_mean_filter(x_angle_array)
-    #x_angle = AoA_filter.antenna_shape_filter(x_angle_array)
-    x5 = np.cos(np.radians(x_angle))
-    y5 = np.sin(np.radians(x_angle))
-    line5.set_data([0, x5], [0, y5])
-    text5.set_position((0.9 * x5, 0.9 * y5))
-    text5.set_text(f'{x_angle:.2f}°')
-
-    return [line1, text1, line2, text2, line3, text3, line4, text4, line5, text5]
+    return [dot, line1, text1, line2, text2]
 
 # 创建并运行动画
 ani = FuncAnimation(fig, animate, frames=np.linspace(0, 360, 360), interval=50, blit=True)

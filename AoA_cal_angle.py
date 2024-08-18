@@ -127,21 +127,41 @@ def find_x_angle_with_row_data(antenna_array_data):
         angle = two_ant_cal_angle(mean_phase_diff,wave_length,antenna_interval)
         return angle 
 
+def find_y_angle_with_col_data(antenna_array_data):
+    if antenna_array_data.shape[0] == 3:
+        diff1 = antenna_array_data[1,:] - antenna_array_data[0,:]
+        diff2 = antenna_array_data[2,:] - antenna_array_data[0,:]
+
+        mean_phase_diff_1 = np.mean(release_jump(-diff1))
+        mean_phase_diff_2 = np.mean(release_jump(-diff2))
+
+        wave_length = 0.125 # meter  maybe need add the frequency offset?
+        antenna_interval = 0.0375 # m
+
+        angle1 = two_ant_cal_angle(mean_phase_diff_1,wave_length,antenna_interval)
+        angle2 = two_ant_cal_angle(mean_phase_diff_2,wave_length,2*antenna_interval)
+
+        #if np.std((angle1,angle2)) >= 20:
+            #print('not stable')
+            #return -180
+        #else:
+            #print('estimate angle:', np.mean((angle1,angle2)))
+        return np.mean((angle1,angle2))       
+    elif antenna_array_data.shape[0] == 2:
+        diff = antenna_array_data[1,:] - antenna_array_data[0,:]
+        mean_phase_diff = np.mean(release_jump(-diff))
+
+        wave_length = 0.125 # meter  maybe need add the frequency offset?
+        antenna_interval = 0.0375 # m
+
+        angle = two_ant_cal_angle(mean_phase_diff,wave_length,antenna_interval)
+        return angle 
 
 def array_ant_cal_x_angle_array(antenna_phase_array, wave_length, d):
-    '''
-    思路如下
-    一个4*4的天线阵列，为了计算在水平方向上的角度，每行天线由MUSIC先计算一个角度，四行天线获得四个角度再平均。
-    '''
-    x_angle_row_1 = 0
-    x_angle_row_2 = 0
-    x_angle_row_3 = 0
-    x_angle_row_4 = 0
-
     antenna_array_row_1 = antenna_phase_array[0,:3,:]
     antenna_array_row_2 = antenna_phase_array[1,2:,:]
     antenna_array_row_3 = antenna_phase_array[2,:2,:]
-    antenna_array_row_4 = antenna_phase_array[3,1:,:]        #shape = 4*320
+    antenna_array_row_4 = antenna_phase_array[3,1:,:]        #shape = 3*320 
     x_angle_row_1 = find_x_angle_with_row_data(antenna_array_row_1)
     x_angle_row_2 = find_x_angle_with_row_data(antenna_array_row_2)
     x_angle_row_3 = find_x_angle_with_row_data(antenna_array_row_3)
@@ -156,4 +176,23 @@ def array_ant_cal_x_angle_array(antenna_phase_array, wave_length, d):
 
     return angle_array
 
+def array_ant_cal_y_angle_array(antenna_phase_array, wave_length, d):
+    antenna_array_col_1 = antenna_phase_array[1:,0,:]
+    antenna_array_col_2 = antenna_phase_array[:2,1,:]
+    antenna_array_col_3 = antenna_phase_array[2:,2,:]
+    antenna_array_col_4 = antenna_phase_array[:3,3,:]        #shape = 3*320
+
+    y_angle_col_1 = find_y_angle_with_col_data(antenna_array_col_1)
+    y_angle_col_2 = find_y_angle_with_col_data(antenna_array_col_2)
+    y_angle_col_3 = find_y_angle_with_col_data(antenna_array_col_3)
+    y_angle_col_4 = find_y_angle_with_col_data(antenna_array_col_4)
+
+    #x_angle_row_1 = find_x_angle_with_music(antenna_array_row_1)
+    #x_angle_row_2 = find_x_angle_with_music(antenna_array_row_2)
+    #x_angle_row_3 = find_x_angle_with_music(antenna_array_row_3)
+    #x_angle_row_4 = find_x_angle_with_music(antenna_array_row_4)
+
+    angle_array = [y_angle_col_1,y_angle_col_2,y_angle_col_3,y_angle_col_4]
+
+    return angle_array
 
