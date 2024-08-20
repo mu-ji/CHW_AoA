@@ -138,6 +138,7 @@ ax3.set_ylim(-0.5, 0.5)
 ax3.set_aspect('equal')
 ax3.set_xlabel('X')
 ax3.set_ylabel('Y')
+ax3.scatter([0],[0],label = 'True Position')
 ax3.set_title('2D Angle of Arrival Visualization')
 x_ticks = np.linspace(-0.5, 0.5, 21)
 y_ticks = np.linspace(-0.5, 0.5, 21)
@@ -148,7 +149,7 @@ ax3.set_position([0.2, 0.1, 0.8, 0.8])
 
 
 # 绘制指示角度的线和文本
-dot, = ax3.plot([], [], 'ro', markersize=10)
+dot, = ax3.plot([], [], 'ro', markersize=10, label = 'Estimate Position')
 
 # 定义动画更新函数
 plt.legend()
