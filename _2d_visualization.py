@@ -99,19 +99,12 @@ def array_angle_cal_from_serial():
                 antenna_interval = 0.0375 # m
                 x_angle_array = AoA_cal_angle.array_ant_cal_x_angle_array(antenna_phase_array, wave_length, antenna_interval)
                 y_angle_array = AoA_cal_angle.array_ant_cal_y_angle_array(antenna_phase_array, wave_length, antenna_interval)
-                y_angle = 0
 
-                wave_length = 0.125 # m
-                antenna_interval = 0.0375 # m
-
-
-                #print('angle1:',angle1)
-                #print('angle2:',angle2)
                 return x_angle_array,y_angle_array
             rawFrame = []
 
 # 设置图像大小和属性
-fig = plt.figure()
+fig = plt.figure(figsize=(20, 10))
 
 ax1 = fig.add_subplot(2,2,1)
 ax1.set_xlim(-1.2, 1.2)
@@ -120,6 +113,7 @@ ax1.set_aspect('equal')
 ax1.set_title('Angle of Arrival x_angle estimation')
 circle = plt.Circle((0, 0), 1, fill=False, color='grey', linewidth=2)
 ax1.add_artist(circle)
+ax1.set_position([0.05, 0.65, 0.2, 0.2])
 
 # 绘制指示角度的线和文本
 line1, = ax1.plot([], [], 'r-', lw=2, label = 'estimated x_angle')
@@ -132,18 +126,25 @@ ax2.set_aspect('equal')
 ax2.set_title('Angle of Arrival y_angle estimation')
 circle = plt.Circle((0, 0), 1, fill=False, color='grey', linewidth=2)
 ax2.add_artist(circle)
+ax2.set_position([0.05, 0.25, 0.2, 0.2])
 
 # 绘制指示角度的线和文本
 line2, = ax2.plot([], [], 'b-', lw=2, label = 'estimated y_angle')
 text2 = ax2.text(0, 0, '', ha='center', va='bottom')
 
 ax3 = fig.add_subplot(2,2,3)
-ax3.set_xlim(-10, 10)
-ax3.set_ylim(-10, 10)
+ax3.set_xlim(-0.5, 0.5)
+ax3.set_ylim(-0.5, 0.5)
 ax3.set_aspect('equal')
 ax3.set_xlabel('X')
 ax3.set_ylabel('Y')
 ax3.set_title('2D Angle of Arrival Visualization')
+x_ticks = np.linspace(-0.5, 0.5, 21)
+y_ticks = np.linspace(-0.5, 0.5, 21)
+ax3.set_xticks(x_ticks)
+ax3.set_yticks(y_ticks)
+ax3.grid()
+ax3.set_position([0.2, 0.1, 0.8, 0.8])
 
 
 # 绘制指示角度的线和文本
@@ -151,13 +152,50 @@ dot, = ax3.plot([], [], 'ro', markersize=10)
 
 # 定义动画更新函数
 plt.legend()
+
+def update_earlier_measurement(data_array, new_data):
+
+    if data_array.shape[0] < 10:
+        # data_array未满,直接添加新数据
+        data_array = np.vstack((data_array, new_data))
+    else:
+        # data_array已满,删除最早的数据并添加新数据
+        data_array = np.delete(data_array, 0, axis=0)
+        data_array = np.vstack((data_array, new_data))
+    
+    return data_array
+
+
+x_earlier_measurement = np.zeros((0,4))
+y_earlier_measurement = np.zeros((0,4))
+
+kalman_filter_x = AoA_filter.Kalman_Filter()
+kalman_filter_y = AoA_filter.Kalman_Filter()
+
 def animate(frame):
+    global x_earlier_measurement
+    global y_earlier_measurement
     anchor_x = 0
     anchor_y = 0
     height = 1
     x_angle_array,y_angle_array = array_angle_cal_from_serial()
-    x_angle = AoA_filter.mean_filter(x_angle_array)
-    y_angle = AoA_filter.mean_filter(y_angle_array)
+
+    x_earlier_measurement = update_earlier_measurement(x_earlier_measurement, x_angle_array)
+    y_earlier_measurement = update_earlier_measurement(y_earlier_measurement, y_angle_array)
+    #x_angle = AoA_filter.mean_filter(x_angle_array)
+    #y_angle = AoA_filter.mean_filter(y_angle_array)
+    kalman_filter_x.update_R(x_earlier_measurement)
+    kalman_filter_x.predict()
+    kalman_filter_x.update(x_angle_array)
+    x_angle = kalman_filter_x.X[0][0]
+
+    kalman_filter_y.update_R(y_earlier_measurement)
+    kalman_filter_y.predict()
+    kalman_filter_y.update(y_angle_array)
+    y_angle = kalman_filter_y.X[0][0]
+
+    #x_angle = AoA_filter.mean_filter(x_angle_array)
+    #y_angle = AoA_filter.mean_filter(y_angle_array)
 
     x1 = np.cos(np.radians(x_angle))
     y1 = np.sin(np.radians(x_angle))
@@ -172,9 +210,10 @@ def animate(frame):
     text2.set_text(f'{y_angle:.2f}°')
 
     
-    x_dot = height/np.tan(x_angle) + anchor_x
-    y_dot = height/np.tan(y_angle) + anchor_y
-    print(x_dot, y_dot)
+    x_dot = height/np.tan(np.radians(x_angle)) + anchor_x
+    y_dot = height/np.tan(np.radians(y_angle)) + anchor_y
+    print('x_angle:', x_angle, x_dot)
+    print('y_angle:', y_angle, y_dot)
     dot.set_data(x_dot, y_dot)
 
     return [dot, line1, text1, line2, text2]
