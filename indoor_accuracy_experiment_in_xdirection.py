@@ -29,7 +29,7 @@ raw_angle_list = []
 KF_angle_list = []
 
 def angle_estimation(true_angle):
-    ser = serial.Serial('COM11', 115200)
+    ser = serial.Serial('COM8', 115200)
     rawFrame = []
 
     x_earlier_measurement = np.zeros((0,4))
@@ -93,15 +93,15 @@ def angle_estimation(true_angle):
     np.save('Indoor_experiment_result/KF_angle_{}.npy'.format(true_angle), np.array(KF_angle_list))
     return raw_angle_list, KF_angle_list
 
+true_angle = 160
+raw_angle_list, KF_angle_list = angle_estimation(true_angle)
 
-raw_angle_list, KF_angle_list = angle_estimation(90)
-
-raw_angle_list = np.load('Indoor_experiment_result/raw_angle_90.npy')
-KF_angle_list = np.load('Indoor_experiment_result/KF_angle_90.npy')
+raw_angle_list = np.load('Indoor_experiment_result/raw_angle_{}.npy'.format(true_angle))
+KF_angle_list = np.load('Indoor_experiment_result/KF_angle_{}.npy'.format(true_angle))
 
 plt.figure()
 plt.plot([i for i in range(len(raw_angle_list))], raw_angle_list, label = 'raw data')
-plt.plot([i for i in range(len(KF_angle_list))], KF_angle_list, label = 'raw data')
+plt.plot([i for i in range(len(KF_angle_list))], KF_angle_list, label = 'KF data')
 plt.legend()
 plt.grid()
 plt.show()

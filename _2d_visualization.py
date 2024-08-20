@@ -16,7 +16,7 @@ import AoA_filter
 from matplotlib.animation import FuncAnimation
 
 def array_angle_cal_from_serial():
-    ser = serial.Serial('COM11', 115200)
+    ser = serial.Serial('COM8', 115200)
     rawFrame = []
     #while iteration < times:
     while True:
@@ -133,8 +133,8 @@ line2, = ax2.plot([], [], 'b-', lw=2, label = 'estimated y_angle')
 text2 = ax2.text(0, 0, '', ha='center', va='bottom')
 
 ax3 = fig.add_subplot(2,2,3)
-ax3.set_xlim(-0.5, 0.5)
-ax3.set_ylim(-0.5, 0.5)
+ax3.set_xlim(-1, 1)
+ax3.set_ylim(-1, 1)
 ax3.set_aspect('equal')
 ax3.set_xlabel('X')
 ax3.set_ylabel('Y')
@@ -178,7 +178,7 @@ def animate(frame):
     global y_earlier_measurement
     anchor_x = 0
     anchor_y = 0
-    height = 1
+    height = 1.5
     x_angle_array,y_angle_array = array_angle_cal_from_serial()
 
     x_earlier_measurement = update_earlier_measurement(x_earlier_measurement, x_angle_array)
