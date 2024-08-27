@@ -1,14 +1,19 @@
 import numpy as np
 
 def mean_filter(angle_array):
-    return np.mean(angle_array)
+    # 去除离群值
+    median = np.median(angle_array)
+    mad = np.median(np.abs(angle_array - median))
+    threshold = median + 1 * mad
+    idx = np.where(np.abs(angle_array - median) < threshold)[0]
+    cleaned_angles = [angle_array[i] for i in idx]
+        # 计算加权平均
+    weights = np.exp(-np.abs(cleaned_angles - np.mean(cleaned_angles)))
+    weights /= np.sum(weights)
+    weighted_sum = np.sum(cleaned_angles * weights)
+    
+    return weighted_sum
 
-def weighted_mean_filter(angle_array):
-    angle_std = np.std(angle_array)
-    weight_array = [1/np.abs(i-angle_std) for i in angle_array]
-    normalized_weight = weight_array / np.linalg.norm(weight_array)
-
-    return np.mean(angle_array*normalized_weight)
 
 def antenna_shape_filter(angle_array):
     if np.mean(angle_array) > 45 and np.mean(angle_array) < 135:
@@ -28,10 +33,14 @@ class Kalman_Filter:
         self.H = np.array([[1],
                            [1],
                            [1],
-                           [1],])                                     
+                           [1],
+                           [1],
+                           [1],
+                           [1],
+                           [1]])                                     
         self.dt = 0                                           
         self.Q = np.diag([0.1])                                  
-        self.R = np.diag([5,5,5,5])                            
+        self.R = np.diag([5,5,5,5,5,5,5,5])                            
         self.P = np.eye(1)                                         
     
     def predict(self):
@@ -48,7 +57,7 @@ class Kalman_Filter:
         self.P = self.P - np.dot(np.dot(K, self.H), self.P)
 
     def update_R(self, earlier_measurement_matrix):
-        if earlier_measurement_matrix.shape == (1, 4):
+        if earlier_measurement_matrix.shape == (1, 8):
             return
         else:
             for i in range(len(self.R)):

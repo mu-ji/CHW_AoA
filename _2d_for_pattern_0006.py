@@ -23,9 +23,9 @@ def array_angle_cal_from_serial():
         byte  = ser.read(1)        
         rawFrame += byte
         if rawFrame[-3:]==[255, 255, 255]:
-            if len(rawFrame) == 1288:
-                received_data = rawFrame[:1288]
-                num_samples = 320
+            if len(rawFrame) == 2312:
+                received_data = rawFrame[:2304]
+                num_samples = 576
 
                 phase_data = np.zeros(num_samples, dtype=np.int16)
                 mag_data = np.zeros(num_samples, dtype=np.int16)
@@ -43,62 +43,48 @@ def array_angle_cal_from_serial():
                 antenna_phase_array = np.zeros((4,4,len(phase_data)))
                 reference_ant_data[0:64] = phase_data[0:64]
                 reference_ant_data,reference_slope = AoA_cal_angle.complete_reference_phase_data(reference_ant_data)
-                '''
-                plt.figure()
-                i = 8
-                plt.plot([i*0.125 for i in range(320)],phase_data, marker='*')
-                plt.plot([i*0.125 for i in range(320)],mag_data, marker='*')
-                plt.plot([8*i*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+1)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+2)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+3)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+4)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+5)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+6)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+7)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+8)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+9)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+10)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+11)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+12)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+13)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+14)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+15)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+16)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+17)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+18)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+19)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+20)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+21)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+22)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+23)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+24)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+25)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+26)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+27)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+28)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+29)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+30)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+31)*0.125]*2, [-201,201],c = 'b')
-                plt.plot([8*(i+32)*0.125]*2, [-201,201],c = 'b')
-                plt.legend()
-                plt.show()
-                '''
-                k = 72
-                for i in range(4):
-                    for j in range(4):
-                        #if i == 0 and j == 0:
-                        #    antenna_phase_array[i][j] = AoA_cal_angle.complete_other_phase_data(phase_data[312:320],reference_slope)
-                        temple_phase = np.zeros_like(phase_data)
-                        temple_phase[k:k+8] = phase_data[k:k+8]
-                        antenna_phase_array[i][j] = AoA_cal_angle.complete_other_phase_data(temple_phase,reference_slope)
-                        #antenna_phase_array[i][j] = phase_data[k:k+8]
-                        k = k + 16
 
-                wave_length = 0.125 # m
-                antenna_interval = 0.0375 # m
-                x_angle_array = AoA_cal_angle.array_ant_cal_x_angle_array(antenna_phase_array, wave_length, antenna_interval)
-                y_angle_array = AoA_cal_angle.array_ant_cal_y_angle_array(antenna_phase_array, wave_length, antenna_interval)
+                antenna_data_list = []
+                i = 72
+                while i < 576:
+                    temp_antenna_data = np.zeros_like(phase_data)
+                    temp_antenna_data[i:i+8] = phase_data[i:i+8]
+                    temp_antenna_data = AoA_cal_angle.complete_other_phase_data(temp_antenna_data, reference_slope)
+                    antenna_data_list.append(temp_antenna_data)
+                    i = i + 16
+
+                first_switch_data = np.array(antenna_data_list)[:16,:]
+                second_switch_data = np.array(antenna_data_list)[16:,:]
+                print(first_switch_data.shape)
+                print(second_switch_data.shape)
+
+                def cal_angle(antenna_data):
+                    diff1 = antenna_data[1,:] - antenna_data[0,:]
+                    diff1 = AoA_cal_angle.release_jump(diff1)
+                    diff2 = antenna_data[2,:] - antenna_data[1,:]
+                    diff2 = AoA_cal_angle.release_jump(diff2)
+
+                    wave_length = 0.125 # meter  maybe need add the frequency offset?
+                    antenna_interval = 0.0375 # m
+
+                    angle1 = AoA_cal_angle.two_ant_cal_angle(np.mean(diff1),wave_length,antenna_interval)
+                    angle2 = AoA_cal_angle.two_ant_cal_angle(np.mean(diff2),wave_length,antenna_interval)
+                    return angle1, angle2
+                
+                first_x_angle1_1, first_x_angle1_2 = cal_angle(first_switch_data[0:3,:])
+                first_x_angle2_1, first_x_angle2_2 = cal_angle(first_switch_data[3:6,:])
+
+                second_x_angle1_1, second_x_angle1_2 = cal_angle(second_switch_data[0:3,:])
+                second_x_angle2_1, second_x_angle2_2 = cal_angle(second_switch_data[3:6,:])
+
+                first_y_angle1_1, first_y_angle1_2 = cal_angle(first_switch_data[6:9,:])
+                first_y_angle2_1, first_y_angle2_2 = cal_angle(first_switch_data[9:12,:])
+
+                second_y_angle1_1, second_y_angle1_2 = cal_angle(second_switch_data[6:9,:])
+                second_y_angle2_1, second_y_angle2_2 = cal_angle(second_switch_data[9:12,:])
+
+                x_angle_array = [first_x_angle1_1, first_x_angle1_2, first_x_angle2_1, first_x_angle2_2, second_x_angle1_1, second_x_angle1_2, second_x_angle2_1, second_x_angle2_2]
+                y_angle_array = [first_y_angle1_1, first_y_angle1_2, first_y_angle2_1, first_y_angle2_2, second_y_angle1_1, second_y_angle1_2, second_y_angle2_1, second_y_angle2_2]
 
                 return x_angle_array,y_angle_array
             rawFrame = []
@@ -167,11 +153,8 @@ def update_earlier_measurement(data_array, new_data):
     return data_array
 
 
-x_earlier_measurement = np.zeros((0,4))
-y_earlier_measurement = np.zeros((0,4))
-
-kalman_filter_x = AoA_filter.Kalman_Filter()
-kalman_filter_y = AoA_filter.Kalman_Filter()
+x_earlier_measurement = np.zeros((0,8))
+y_earlier_measurement = np.zeros((0,8))
 
 def animate(frame):
     global x_earlier_measurement
@@ -183,20 +166,9 @@ def animate(frame):
 
     x_earlier_measurement = update_earlier_measurement(x_earlier_measurement, x_angle_array)
     y_earlier_measurement = update_earlier_measurement(y_earlier_measurement, y_angle_array)
-    #x_angle = AoA_filter.mean_filter(x_angle_array)
-    #y_angle = AoA_filter.mean_filter(y_angle_array)
-    kalman_filter_x.update_R(x_earlier_measurement)
-    kalman_filter_x.predict()
-    kalman_filter_x.update(x_angle_array)
-    x_angle = kalman_filter_x.X[0][0]
 
-    kalman_filter_y.update_R(y_earlier_measurement)
-    kalman_filter_y.predict()
-    kalman_filter_y.update(y_angle_array)
-    y_angle = kalman_filter_y.X[0][0]
-
-    #x_angle = AoA_filter.mean_filter(x_angle_array)
-    #y_angle = AoA_filter.mean_filter(y_angle_array)
+    x_angle = AoA_filter.mean_filter(np.mean(x_earlier_measurement, axis=0))
+    y_angle = AoA_filter.mean_filter(np.mean(y_earlier_measurement, axis=0))
 
     x1 = np.cos(np.radians(x_angle))
     y1 = np.sin(np.radians(x_angle))
@@ -212,7 +184,7 @@ def animate(frame):
 
     
     x_dot = height/np.tan(np.radians(x_angle)) + anchor_x
-    y_dot = height/np.tan(np.radians(y_angle)) + anchor_y
+    y_dot = -height/np.tan(np.radians(y_angle)) + anchor_y
     print('x_angle:', x_angle, x_dot)
     print('y_angle:', y_angle, y_dot)
     dot.set_data(x_dot, y_dot)
