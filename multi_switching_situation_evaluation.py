@@ -46,7 +46,16 @@ while True:
                 mag_data[i] = mag[0]
 
             phase_data = phase_data.astype(np.float32)
+            mag_data = mag_data.astype(np.float32)
+            '''
+            I = mag_data * np.cos(phase_data)  # 同相分量
+            Q = mag_data * np.sin(phase_data)   # 正交分量
 
+            plt.figure()
+            plt.plot([i*0.125 for i in range(576)], I, label='I')
+            plt.plot([i*0.125 for i in range(576)], Q, label='Q')
+            plt.show()
+            '''
             offset_phase_data = np.zeros_like(phase_data)
 
             mag_data = mag_data.astype(np.float32)
@@ -65,22 +74,30 @@ while True:
                 antenna0_data = AoA_cal_angle.complete_other_phase_data(antenna0_data,reference_slope)
                 antenna0_data_list.append(antenna0_data[72:80])
 
-                fig, ax = plt.subplots(figsize=(10, 6))
-                plt.plot([i*0.125 for i in range(576)],phase_data, marker='*')
-                plt.plot([i*0.125 for i in range(576)],antenna0_data)
+                fig = plt.figure()
+                ax1 = fig.add_subplot(211)
+                ax2 = fig.add_subplot(212)
+                ax2.plot([i*0.125 for i in range(576)],mag_data, marker='*')
+                ax1.plot([i*0.125 for i in range(576)],phase_data, marker='*')
+                ax1.plot([i*0.125 for i in range(576)],antenna0_data)
 
                 k = 8
                 flag = True
                 while k < 72:
-                    switch_slot = plt.Rectangle(xy=(8*k*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'r')
-                    ax.add_patch(switch_slot)
+                    ax1_switch_slot = plt.Rectangle(xy=(8*k*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'r')
+                    ax2_switch_slot = plt.Rectangle(xy=(8*k*0.125 , 100), width=1, height=200, alpha=0.2, angle=0.0, color = 'r')
+                    ax1.add_patch(ax1_switch_slot)
+                    ax2.add_patch(ax2_switch_slot)
                     if flag:
-                        sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'g')
+                        ax1_sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'g')
+                        ax2_sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , 100), width=1, height=200, alpha=0.2, angle=0.0, color = 'g')
                         flag = False
                     else:
-                        sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'y')
+                        ax1_sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , -201), width=1, height=402, alpha=0.2, angle=0.0, color = 'y')
+                        ax2_sample_slot = plt.Rectangle(xy=(8*(k+1)*0.125 , 100), width=1, height=200, alpha=0.2, angle=0.0, color = 'y')
                         flag = True
-                    ax.add_patch(sample_slot)
+                    ax1.add_patch(ax1_sample_slot)
+                    ax2.add_patch(ax2_sample_slot)
                     k = k + 2
                 plt.show()
                 i = i + 16
