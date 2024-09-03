@@ -16,7 +16,7 @@ import AoA_filter
 from matplotlib.animation import FuncAnimation
 
 def array_angle_cal_from_serial():
-    ser = serial.Serial('COM11', 115200)
+    ser = serial.Serial('COM8', 115200)
     rawFrame = []
     #while iteration < times:
     while True:
@@ -55,8 +55,6 @@ def array_angle_cal_from_serial():
 
                 first_switch_data = np.array(antenna_data_list)[:16,:]
                 second_switch_data = np.array(antenna_data_list)[16:,:]
-                print(first_switch_data.shape)
-                print(second_switch_data.shape)
 
                 def cal_angle(antenna_data):
                     diff1 = antenna_data[1,:] - antenna_data[0,:]
@@ -161,7 +159,7 @@ def animate(frame):
     global y_earlier_measurement
     anchor_x = 0
     anchor_y = 0
-    height = 1.5
+    height = 2.6
     x_angle_array,y_angle_array = array_angle_cal_from_serial()
 
     x_earlier_measurement = update_earlier_measurement(x_earlier_measurement, x_angle_array)
@@ -185,8 +183,8 @@ def animate(frame):
     
     x_dot = height/np.tan(np.radians(x_angle)) + anchor_x
     y_dot = -height/np.tan(np.radians(y_angle)) + anchor_y
-    print('x_angle:', x_angle, x_dot)
-    print('y_angle:', y_angle, y_dot)
+    #print('x_angle:', x_angle, x_dot)
+    #print('y_angle:', y_angle, y_dot)
     dot.set_data(x_dot, y_dot)
 
     return [dot, line1, text1, line2, text2]

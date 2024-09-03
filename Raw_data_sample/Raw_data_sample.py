@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from math import pi, atan2, sqrt
 from scipy.linalg import eig
 
-ser = serial.Serial('COM11', 115200)
+ser = serial.Serial('COM8', 115200)
 
 SPEED_OF_LIGHT  = 299792458
 frequency = 16000000
@@ -68,6 +68,6 @@ while True:
         all_data['mag_data'] = np.array(all_data['mag_data'])
         all_data['rssi'] = np.array(all_data['rssi'])
 
-        np.savez('Raw_data_sample/0006_2_(10,0)_data.npz', **all_data)
+        np.savez('Raw_data_sample/0006_2.5_(50,10)_data.npz', **all_data)
         break
 
