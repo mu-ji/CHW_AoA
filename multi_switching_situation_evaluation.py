@@ -29,6 +29,7 @@ antenna_diff_list = []
 while True:
     byte  = ser.read(1)        
     rawFrame += byte
+    print(len(rawFrame))
     if rawFrame[-3:]==[255, 255, 255]:
         if len(rawFrame) == 2312:
             received_data = rawFrame[:2304]
@@ -129,7 +130,7 @@ while True:
             '''
 
             if np.array(antenna_diff_list).shape == (100, 16, 8):
-                np.save('switch_phase_different/0005_72_0.5_90_90_1.npy', np.array(antenna_diff_list))
+                np.save('switch_phase_different/0006_72_0.5_90_90_1.npy', np.array(antenna_diff_list))
                 break
 
             try:

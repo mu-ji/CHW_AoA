@@ -16,12 +16,13 @@ import AoA_filter
 from matplotlib.animation import FuncAnimation
 
 def array_angle_cal_from_serial():
-    ser = serial.Serial('COM8', 115200)
+    ser = serial.Serial('COM11', 115200)
     rawFrame = []
     #while iteration < times:
     while True:
         byte  = ser.read(1)        
         rawFrame += byte
+        #print(len(rawFrame))
         if rawFrame[-3:]==[255, 255, 255]:
             if len(rawFrame) == 2312:
                 received_data = rawFrame[:2304]
@@ -154,12 +155,15 @@ def update_earlier_measurement(data_array, new_data):
 x_earlier_measurement = np.zeros((0,8))
 y_earlier_measurement = np.zeros((0,8))
 
+kalman_filter_x = AoA_filter.Kalman_Filter()
+kalman_filter_y = AoA_filter.Kalman_Filter()
+
 def animate(frame):
     global x_earlier_measurement
     global y_earlier_measurement
     anchor_x = 0
     anchor_y = 0
-    height = 2.6
+    height = 2
     x_angle_array,y_angle_array = array_angle_cal_from_serial()
 
     x_earlier_measurement = update_earlier_measurement(x_earlier_measurement, x_angle_array)

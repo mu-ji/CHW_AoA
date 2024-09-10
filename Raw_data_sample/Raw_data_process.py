@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import AoA_cal_angle
 
-data = np.load('Raw_data_sample/0006_2_(0,0)_data.npz')
+data = np.load('Raw_data_sample/0006_2.5_(0,0)_data.npz')
 
 print(data['phase_data'].shape)
 
@@ -40,8 +40,10 @@ plt.show()
 
 #plt.plot([i for i in range(200)], reduced_data[:,0])
 
+
 packet_number = 0
-data = np.load('Raw_data_sample/0006_2_(10,0)_data.npz')
+
+data = np.load('Raw_data_sample/0006_2.5_(0,0)_data.npz')
 
 def svd_reconstruct_with_max_value(A):
     U, S, Vt = np.linalg.svd(A)
@@ -109,10 +111,6 @@ while packet_number < len(data['phase_data']):
     first_phase_matrix = generate_phase_matrix(first_switch_data,'0006', reference_ant_data)
     second_phase_matrix = generate_phase_matrix(second_switch_data,'0006', reference_ant_data)
 
-    diff_x_first = first_phase_matrix[:,1:] - first_phase_matrix[:,0:-1]
-    diff_x_second = second_phase_matrix[:,1:] - second_phase_matrix[:,0:-1]
-
-    
     plt.figure(figsize=(6, 4))
     plt.imshow(first_phase_matrix, cmap='coolwarm', interpolation='nearest')
 
@@ -133,6 +131,8 @@ while packet_number < len(data['phase_data']):
     # 显示图形
     plt.show()
     
+    #def cal_angle(phase_matrix):
+
 
     packet_number += 1
 

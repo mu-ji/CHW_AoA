@@ -7,7 +7,7 @@ from doa_py.plot import plot_spatial_spectrum
 
 import AoA_cal_angle
 
-data = np.load('Raw_data_sample/0006_2_(0,0)_data.npz')
+data = np.load('Raw_data_sample/0006_2.5_(40,0)_data.npz')
 packet_number = 0
 while packet_number < 200:
     packet_number += 1
@@ -42,7 +42,7 @@ while packet_number < 200:
 
     print(packet_number)
 
-    angle_grids = np.arange(-90, 90, 1)
+    angle_grids = np.arange(0, 180, 1)
     spectrum = music(
         received_data=received_data,
         num_signal=1,
