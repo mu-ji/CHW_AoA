@@ -16,7 +16,6 @@ ser = serial.Serial('COM11', 115200)
 import cmath
 
 SPEED_OF_LIGHT  = 299792458
-frequency = 16000000
 
 rawFrame = []
 
@@ -87,18 +86,12 @@ while True:
 
             I_data = I_data.astype(np.float32)
             Q_data = Q_data.astype(np.float32)
-            '''
-            I = mag_data * np.cos(phase_data)  # 同相分量
-            Q = mag_data * np.sin(phase_data)   # 正交分量
 
-            plt.figure()
-            plt.plot([i*0.125 for i in range(576)], I, label='I')
-            plt.plot([i*0.125 for i in range(576)], Q, label='Q')
-            plt.show()
-            '''
+            
             plt.figure()
             antenna_samples = (num_samples-8)/8       #3 is number of antennas
 
+            
             ax1 = plt.subplot(231)
             i = 0
             while i < 8:
@@ -123,7 +116,7 @@ while True:
             plt.legend()
             ax6 = plt.subplot(236)
             ax6.set_title('antenna 3 data')
-
+            
             times = 1
             while i < num_samples and times < antenna_samples:
                 ax3.plot([0,I_data[i]], [0, Q_data[i]], label='{}'.format(i))
@@ -139,7 +132,7 @@ while True:
             plt.legend()
             
             plt.show()
-
+            
             reference_I = I_data[:8]
             reference_Q = Q_data[:8]
 
@@ -177,14 +170,15 @@ while True:
             ant1_I, ant1_Q = ant_IQ_norm(ant1_I, ant1_Q)
             ant2_I, ant2_Q = ant_IQ_norm(ant2_I, ant2_Q)
             ant3_I, ant3_Q = ant_IQ_norm(ant3_I, ant3_Q)
+        
             
-
             for i in range(len(ant0_I)):
                 plt.plot([0,ant0_I[i]], [0, ant0_Q[i]], label='{}'.format(i))
                 i = i+1
             plt.legend()
             plt.title('ant0 IQ vector after normalization')
             plt.show()
+            
             #from the reference IQ vector pattern, there is a small change between every us except pi/2 caused by 250KHz frequency shift
 
             def calculate_angle(I1, Q1, I2, Q2):
@@ -208,7 +202,7 @@ while True:
             
             # in every us, the IQ vector will rotate pi/2 + a small error angle
             angle_change_1us = np.mean(ref_theta_array)/4
-            
+            print('angle_change_1us:',angle_change_1us)
             # this function helps to compensate the 250KHz and a small error angle
             def rotate_vector(I, Q, theta):
                 I_new = I * np.cos(theta) - Q * np.sin(theta)
@@ -232,12 +226,12 @@ while True:
             ax1.set_xlim(-1,1)
             ax1.set_ylim(-1,1)
             plt.legend()
-
+            
             ant0_I, ant0_Q = compensate_phase(ant0_I, ant0_Q, angle_change_1us)
             ant1_I, ant1_Q = compensate_phase(ant1_I, ant1_Q, angle_change_1us)
             ant2_I, ant2_Q = compensate_phase(ant2_I, ant2_Q, angle_change_1us)
             ant3_I, ant3_Q = compensate_phase(ant3_I, ant3_Q, angle_change_1us)
-
+            
             ax2 = plt.subplot(122)
             unit_circle = plt.Circle((0, 0), 1, color='blue', fill=False, label='Unit Circle')
             ax2.add_artist(unit_circle)
@@ -263,7 +257,13 @@ while True:
             ant1_I_mean, ant1_Q_mean = rotate_vector(ant1_I_mean, ant1_Q_mean, -rotate_angle_1_0)
             ant2_I_mean, ant2_Q_mean = rotate_vector(ant2_I_mean, ant2_Q_mean, -rotate_angle_2_0)
             ant3_I_mean, ant3_Q_mean = rotate_vector(ant3_I_mean, ant3_Q_mean, -rotate_angle_3_0)
+            
+            ant0_I_mean, ant0_Q_mean = normalization(ant0_I_mean, ant0_Q_mean)
+            ant1_I_mean, ant1_Q_mean = normalization(ant1_I_mean, ant1_Q_mean)
+            ant2_I_mean, ant2_Q_mean = normalization(ant2_I_mean, ant2_Q_mean)
+            ant3_I_mean, ant3_Q_mean = normalization(ant1_I_mean, ant3_Q_mean)
 
+            
             ax = plt.subplot(111)
             k = 0
             #ax.plot([0, np.min(ant0_I)], [0, ant0_Q[np.argmin(ant0_I)]], c = 'b', linewidth = 1, label = 'ant0_min')
@@ -286,16 +286,7 @@ while True:
             ax.set_ylim(-1,1)
             plt.legend()
             plt.show()
-            '''
-            ant1_I_mean = -ant1_I_mean
-            ant1_Q_mean = -ant1_Q_mean
-
-            diff0_1 = np.arctan(ant0_Q_mean/ant0_I_mean) - np.arctan(ant1_Q_mean/ant1_I_mean)
-            diff1_2 = np.arctan(ant1_Q_mean/ant1_I_mean) - np.arctan(ant2_Q_mean/ant2_I_mean)
-
-            print(diff0_1)
-            print(diff1_2)
-            '''
+            
 
             #for i in range(len(ant0_I)):
 
@@ -308,6 +299,10 @@ while True:
                 ant1_theta = cmath.phase(complex(ant1_I_mean, ant1_Q_mean))
                 ant2_theta = cmath.phase(complex(ant2_I_mean, ant2_Q_mean))
 
+                ant1_theta = ant1_theta - ant0_theta
+                ant2_theta = ant2_theta - ant0_theta
+                ant0_theta = 0
+
                 received_signal = np.array([cmath.exp(1j*ant0_theta), cmath.exp(1j*ant1_theta), cmath.exp(1j*ant2_theta)])
                 angle_list = [np.radians(i) for i in range(-90, 90)]
                 y_alpha_list = []
@@ -315,12 +310,39 @@ while True:
                     y_alpha = steering_vector(alpha)[0]*received_signal[0] + steering_vector(alpha)[1]*received_signal[1] + steering_vector(alpha)[2]*received_signal[2]
                     y_alpha_list.append(y_alpha)
 
-                plt.plot([i for i in range(-90, 90)], y_alpha_list)
-                plt.show()
+                #plt.plot([i for i in range(-90, 90)], y_alpha_list)
+                #plt.show()
                 return [i for i in range(-90, 90)][np.argmax(np.array(y_alpha_list))]
             
             angle = DoA_algorithm(ant0_I_mean, ant0_Q_mean, ant1_I_mean, ant1_Q_mean, ant2_I_mean, ant2_Q_mean)
-            print(angle)
+            print('DoA:', angle)
+
+            def cal_signal_diraction(ant0_I_mean, ant0_Q_mean, ant3_I_mean, ant3_Q_mean):
+                phase_diff_0_3 = calculate_angle(ant0_I_mean, ant0_Q_mean, ant3_I_mean, ant3_Q_mean)
+                #print(phase_diff_0_3)
+                if calculate_angle(ant3_I_mean, ant3_Q_mean, rotate_vector(ant0_I_mean, ant0_Q_mean, phase_diff_0_3)[0], rotate_vector(ant0_I_mean, ant0_Q_mean, phase_diff_0_3)[1]) < 1:
+                    arccos = (phase_diff_0_3/(2*np.pi))*0.125/0.0375
+                    #print('arccos:', arccos)
+                    if arccos > 1:
+                        arccos = 1
+                    elif arccos < -1:
+                        arccos = -1
+                    return np.arccos(arccos)/np.pi*180
+                else:
+                    arccos = (-phase_diff_0_3/(2*np.pi))*0.125/0.0375
+                    if arccos > 1:
+                        arccos = 1
+                    elif arccos < -1:
+                        arccos = -1
+                    return np.arccos(arccos)/np.pi*180
+
+            #angle_0_1 = cal_signal_diraction(ant0_I_mean, ant0_Q_mean, ant1_I_mean, ant1_Q_mean)
+            #angle_2_3 = cal_signal_diraction(ant2_I_mean, ant2_Q_mean, ant3_I_mean, ant3_Q_mean)
+            #print(angle_0_1)
+            #print(angle_2_3)
+            #print('x_angle:', (angle_0_1+angle_2_3)/2)
+
+
             try:
                 response_rssi = bytes(rawFrame[-8:-4])
                 response_rssi = int(response_rssi.decode('utf-8'))
