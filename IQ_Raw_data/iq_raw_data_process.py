@@ -4,7 +4,7 @@ import AoA_cal_angle
 import cmath
 SPEED_OF_LIGHT  = 299792458
 
-data = np.load('IQ_Raw_data/0_data.npz')
+data = np.load('IQ_Raw_data/-60_data.npz')
 
 print(data['I_data'].shape)
 

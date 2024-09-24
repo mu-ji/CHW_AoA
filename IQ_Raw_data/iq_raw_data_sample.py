@@ -11,7 +11,7 @@ from scipy.linalg import eig
 
 import AoA_algorithm
 import AoA_cal_angle
-ser = serial.Serial('COM11', 115200)
+ser = serial.Serial('COM8', 115200)
 
 import cmath
 
@@ -73,5 +73,5 @@ while True:
         all_data['rssi'] = np.array(all_data['rssi'])
         all_data['pattern'] = ['42,43,44,41']
 
-        np.savez('IQ_Raw_data/0_data.npz', **all_data)
+        np.savez('IQ_Raw_data/60_data.npz', **all_data)
         break
